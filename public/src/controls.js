@@ -53,8 +53,8 @@ document.addEventListener('keyup', function(event){
         keys.q = false;
     }
     if(event.key == ' '){
+        ship.shootMissile();
         keys.space = false;
-        ship.shoot();
     }
 });
 
@@ -68,4 +68,25 @@ function mouseRelativeToTheShip(event){
 let mouseAngle = 0;
 document.addEventListener('mousemove', function(event){
     mouseAngle = Math.atan2(mouseRelativeToTheShip(event).y, mouseRelativeToTheShip(event).x);
+});
+
+let mouseDown = false;
+let mouseInterval;
+document.addEventListener('mousedown', function(){
+    mouseDown = true;
+    if(mouseInterval) clearInterval(mouseInterval);
+    mouseInterval = setInterval(function(){
+        ship.shoot(mouseAngle);
+    }, 100);
+});
+
+document.addEventListener('mouseup', function(){
+    clearInterval(mouseInterval);
+    mouseDown = false;
+});
+
+//if screen loses focuse mouseDown is set to false
+document.addEventListener('blur', function(){
+    clearInterval(mouseInterval);
+    mouseDown = false;
 });

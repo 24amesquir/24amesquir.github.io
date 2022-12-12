@@ -1,5 +1,7 @@
 let ships = {'lightning': 'assets/images/lightning.png', '': ''}
 let bullets = [];
+let particles = [];
+let objects = [];
 
 class Ship{
     constructor(x, y, angle, color,src='lightning',isEnemey=false){
@@ -19,13 +21,15 @@ class Ship{
         this.shipImage.src = 'assets/images/'+src+'.png';
         this.goingDown = false;
         this.rotation = 0;
+        this.size = (this.shipImage.width+this.shipImage.height)/2;
         this.rotateInterval = [0,0];
         this.maxRotateSpeed = 1;
         this.rotationSpeed = .02;
-        this.maxBullets = 10;
-        this.reloadSpeed = 600;
+        this.maxBullets = 30;
+        this.reloadSpeed = 60;
         this.currentBullets = 10;
         this.isEnemy = isEnemey;
+        this.missiles = 2;
     }
 
     draw(){/*
@@ -59,7 +63,8 @@ class Ship{
         if(this.x < 0) this.x = canvas.width;
         if(this.y > canvas.height) this.y = 0;
         if(this.y < 0) this.y = canvas.height;
-        if(this.health < 20){
+        if(this.health < 20 && this.isEnemy == false && music.title != 'Tanc_a_lelek.mp3'){
+            music.stop();
             playSong('Tanc_a_lelek.mp3')
         }
         if(this.isEnemy == false){
@@ -68,10 +73,10 @@ class Ship{
         this.applyGravity();
         this.applyFriction();
         //every 60 frames, reload a bullet
-        frameCount++;
         if(frameCount % this.reloadSpeed == 0){
             this.reloadBullets();
         }
+        this.draw();
     }
 
     accelerate(amount = this.maxAcc/10){
@@ -88,16 +93,41 @@ class Ship{
         return degrees * Math.PI / 180;
     }
 
-    shoot(){
+    shoot(angle = this.degreesToRadians(this.rotation)-Math.PI/2){
         //x, y, angle, color, size)
         if(this.currentBullets > 0){
-            bullets.push(new Bullet(this.x-3, this.y-10, this.degreesToRadians(this.rotation)-Math.PI/2, 'red', 5));
+            bullets.push(new Bullet(this.x, this.y, angle, 'white', 30/globalScale));
+            objects.push(new Bullet(this.x, this.y, angle, 'white', 30/globalScale));
             this.currentBullets -= 1;
         }
     }
 
+    shootMissile(){
+        if(this.missiles > 0){
+            // missle class takes x, y, angle, speed, target
+            if(this.missiles == 1){
+                bullets.push(new Missile(this.x+20, this.y-30, this.degreesToRadians(this.rotation)-Math.PI/2, 2, enemyShip));
+                objects.push(new Missile(this.x+20, this.y-30, this.degreesToRadians(this.rotation)-Math.PI/2, 2, enemyShip));
+            }else if(this.missiles == 2){
+                bullets.push(new Missile(this.x-20, this.y-30, this.degreesToRadians(this.rotation)-Math.PI/2, 2, enemyShip));
+                objects.push(new Missile(this.x-20, this.y-30, this.degreesToRadians(this.rotation)-Math.PI/2, 2, enemyShip));
+            }
+            this.missiles -= 1;
+        }
+    }
+
+    getBulletsFromList(list){
+        let numBullets = 0
+        for(var i = 0; i < list.length; i++){
+            if(list[i].constructor.name == "Bullet"){
+                numBullets += 1;
+            }
+        }
+        return numBullets;
+    }
+
     reloadBullets(){
-        if(bullets.length < this.maxBullets){
+        if(this.getBulletsFromList(objects) < this.maxBullets){
             this.currentBullets += 1;
         }else{
             this.currentBullets = this.maxBullets;
@@ -233,7 +263,23 @@ class Ship{
 
     }
 
-
-
-
+    remove(){
+        this.x = -100;
+        this.y = -100;
+        this.rotation = 0;
+        this.acc = 0;
+        this.vel = 0;
+        this.angle = 0;
+        this.currentBullets = 0;
+        this.missiles = 0;
+        this.rotateInterval = [0, 0];
+        for(let i = 0; i < 100; i++){
+            particles.push(new Particle(this.x, this.y, 'red', 5, 10, 100));
+            objects.push(new Particle(this.x, this.y, 'red', 5, 10, 100));
+        }
+        objects.splice(objects.indexOf(this), 1);
+    }
 }
+
+//Q: how do i push to github using a .git url
+//A: git remote add origin

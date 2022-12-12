@@ -159,3 +159,81 @@ document.addEventListener('keydown', function(event){
         }
     }
 });
+
+let sfx = [];
+let sfxPath = 'assets/sound/sfx/';
+
+let sounds = {
+    'alarm': 'alarm_small_07.wav',
+    'rocket1': 'engine_rocket_01.wav',
+    'rocket2': 'engine_rocket_02.wav',
+    'rocket3': 'engine_rocket_03.wav',
+    'explosion1': 'explosion_big_01.wav',
+    'explosion2': 'explosion_big_02.wav',
+    'explosion3': 'explosion_big_03.wav',
+    'explosion4': 'explosion_big_04.wav',
+    'gunfire': 'gunfie_firefight.wav',
+    'servo': 'gunfire_servo.wav',
+    'hit1': 'ship_hit_01.wav',
+    'hit2': 'ship_hit_02.wav',
+    'hit3': 'ship_hit_03.wav',
+    'hit4': 'ship_hit_04.wav',
+}
+
+
+let sfxInterval;
+class Sound{
+    constructor(title, volume=.5, timesToPlay=1, interval = 1000){
+        this.title = title;
+        this.volume = volume;
+        this.isPlaying = false;
+        this.src = sfxPath + sounds[title];
+        this.audio = new Audio(this.src);
+        this.audio.volume = volume;
+        this.timesToPlay = timesToPlay;
+        this.interval = interval;
+        clearInterval(sfxInterval);
+        clearInterval(sfxInterval-1)
+    }
+    play(){
+        if(this.timesToPlay == 1){
+            this.audio.play();
+            this.isPlaying = true;
+        }else if(this.timesToPlay > 1){
+            this.audio.play();
+            this.timesToPlay--;
+            sfxInterval = setInterval(() => {
+                this.audio.play();
+                this.timesToPlay--;
+                if(this.timesToPlay <= 0){
+                    clearInterval(sfxInterval);
+                    this.isPlaying = false;
+                }
+            }, this.interval);
+        }else if(this.timesToPlay == -1){
+            this.audio.play();
+            this.isPlaying = true;
+            sfxInterval = setInterval(() => {
+                this.audio.play();
+            }, this.interval);
+        }
+    }
+    stop(){
+        this.audio.pause();
+        this.audio.currentTime = 0;
+        this.isPlaying = false;
+    }
+    setVolume(volume){
+        this.volume = volume;
+        this.audio.volume = volume;
+    }
+    remove(){
+        this.audio.remove();
+        this.stop();
+        clearInterval(sfxInterval);
+        clearInterval(sfxInterval-1)
+    }
+}
+
+// create a sound object for alarm
+let alarm = new Sound('alarm', .2, -1, 500);
