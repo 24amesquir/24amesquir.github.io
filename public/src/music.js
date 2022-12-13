@@ -182,6 +182,7 @@ let sounds = {
 
 
 let sfxInterval;
+let sfxIntervals = [];
 class Sound{
     constructor(title, volume=.5, timesToPlay=1, interval = 1000){
         this.title = title;
@@ -206,7 +207,9 @@ class Sound{
                 this.audio.play();
                 this.timesToPlay--;
                 if(this.timesToPlay <= 0){
-                    clearInterval(sfxInterval);
+                    for(let i = 0; i < sfxIntervals.length; i++){
+                        clearInterval(sfxIntervals[i]);
+                    }
                     this.isPlaying = false;
                 }
             }, this.interval);
@@ -216,6 +219,7 @@ class Sound{
             sfxInterval = setInterval(() => {
                 this.audio.play();
             }, this.interval);
+            sfxIntervals.push(sfxInterval);
         }
     }
     stop(){
@@ -230,8 +234,9 @@ class Sound{
     remove(){
         this.audio.remove();
         this.stop();
-        clearInterval(sfxInterval);
-        clearInterval(sfxInterval-1)
+        for(let i = 0; i< sfxIntervals.length; i++){
+            clearInterval(sfxIntervals[i]);
+        }
     }
 }
 

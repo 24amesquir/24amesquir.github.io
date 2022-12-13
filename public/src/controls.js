@@ -65,10 +65,27 @@ function mouseRelativeToTheShip(event){
     };
 }
 
+let mouseX = 0;
+let mouseY = 0;
 let mouseAngle = 0;
 document.addEventListener('mousemove', function(event){
     mouseAngle = Math.atan2(mouseRelativeToTheShip(event).y, mouseRelativeToTheShip(event).x);
+    mouseX = event.clientX;
+    mouseY = event.clientY;
+    mouseOver(enemyShip);
 });
+
+function mouseOver(other){
+    //if the mouse is within 50 px of the other object draw a box around it
+    if(mouseX > other.x - 50 && mouseX < other.x + other.size + 50){
+        if(mouseY > other.y - 50 && mouseY < other.y + other.size + 50){
+            //draw a box around the object
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(other.x - 50, other.y - 50, other.size + 100, other.size + 100);
+        }
+    }
+}
 
 let mouseDown = false;
 let mouseInterval;

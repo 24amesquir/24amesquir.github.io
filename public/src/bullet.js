@@ -6,21 +6,26 @@ class Missile{
         this.angle = angle;
         this.speed = speed;
         this.target = target;
-        this.size = 5;
         this.color = "red";
-        this.damage = 10;
+        this.damage = 30;
         this.range = canvas.width * 1.2;
         this.distance = 0;
         this.frame = 0;
         this.image = new Image();
+        this.size = 3.5;
+        if(Math.floor(Math.random()*1000) == 69){
+            this.size = 10;
+            //for my loved one giddy mic biddy
+        }
         this.image.src = "assets/images/missile.png";
+        this.rotationSpeed = 0.5;
         alarm.play();
     }
     draw(){
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle+Math.PI/2);
-        ctx.drawImage(this.image, -this.image.width/globalScale*2, -this.image.height/globalScale*2, this.image.width/globalScale*4, this.image.height/globalScale*4);
+        ctx.drawImage(this.image, -this.image.width/globalScale*this.size, -this.image.height/globalScale*this.size, this.image.width/globalScale*(this.size*2), this.image.height/globalScale*(this.size*2));
         ctx.restore();
     }
     update(){
@@ -77,13 +82,17 @@ class Bullet{
         this.y = y;
         this.angle = angle;
         this.color = color;
-        this.size = size;
+        this.size = size+1;
         this.damage = 5;
         this.speed = this.size * 1.2;
+        this.image = new Image();
+        this.image.src = "assets/images/bulletred.png";
     }
     collision(other){
         //check if the bullet is colliding with the other object using this.size and other.width, other.height
-        if(this.x + this.size > other.x && this.x < other.x + other.width){
+        other.width = (other.shipImage.width/globalScale);
+        other.height = (other.shipImage.height/globalScale);
+        if(this.x + this.size > other.x-other.width && this.x < other.x + other.width){
             if(this.y + this.size > other.y && this.y < other.y + other.height){
                 return true;
             }
@@ -93,9 +102,8 @@ class Bullet{
     draw(){
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
-        ctx.fillStyle = this.color;
-        ctx.fillRect(0, 0, this.size*3, this.size);
+        ctx.rotate(this.angle+Math.PI/2);
+        ctx.drawImage(this.image, -this.image.width/globalScale*this.size, -this.image.height/globalScale*this.size, this.image.width/globalScale*(this.size*2), this.image.height/globalScale*(this.size*2));
         ctx.restore();
     }
     update(){
@@ -108,7 +116,6 @@ class Bullet{
         if(this.collision(enemyShip)){
             enemyShip.health -= this.damage;
             this.remove();
-            console.log("hit");
         }
     }
     remove(){

@@ -1,10 +1,14 @@
-let ships = {'lightning': 'assets/images/lightning.png', '': ''}
+let guns = {
+    'ak-100': { 'price': 2000, 'caliber': 100, 'firepower': 8, 'fireRate': 400, 'reloadRate': 0.57, 'clipAmount': 4, 'powerNeed': 1, 'crewNeed': 6, 'ammoNeed': 1 },
+    'd-80-molot': { 'price': 4000, 'caliber': 130, 'firepower': 8, 'fireRate': 240, 'reloadRate': 0.4, 'clipAmount': 4, 'powerNeed': 1, 'crewNeed': 6, 'ammoNeed': 1 }
+}
+let ships = {'lightning': {'src':'public/assets/images/lightning.png','health':100,'guns':{'type':guns['ak-100'],'number':2}, 'gladiator': 'public/assets/images/gladiator.png'}}
 let bullets = [];
 let particles = [];
 let objects = [];
 
 class Ship{
-    constructor(x, y, angle, color,src='lightning',isEnemey=false){
+    constructor(x, y, angle, color,src='lightning',isEnemey=false,type='lightning'){
         this.x = x;
         this.y = y;
         this.angle = angle;
@@ -14,7 +18,7 @@ class Ship{
         this.maxVel = 2.6;
         this.maxAcc = 0.1;
         this.friction = 0.01;
-        this.turnSpeed = Math.PI/180;
+        this.turnSpeed = Math.PI/180*2;
         this.maxTurn = .9;
         this.health = 100;
         this.shipImage = new Image();
@@ -30,21 +34,34 @@ class Ship{
         this.currentBullets = 10;
         this.isEnemy = isEnemey;
         this.missiles = 2;
+        this.type = type;
+        this.gunSpacing = 10;
     }
 
-    draw(){/*
+    draw(){
+
+        //TODO: arrow showing where the ship is pointing
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle/180*Math.PI);
-        ctx.fillStyle = this.color;
+        ctx.rotate(this.angle+Math.PI/2);
         ctx.beginPath();
-        ctx.moveTo(0, -10);
-        ctx.lineTo(10, 10);
-        ctx.lineTo(0, 5);
-        ctx.lineTo(-10, 10);
-        ctx.lineTo(0, -10);
-        ctx.fill();
-        ctx.restore();*/
+        ctx.moveTo(0, -200);
+        ctx.lineTo(0, -this.size);
+        ctx.strokeStyle = this.color;
+        ctx.stroke();
+        ctx.restore();
+        //line showing where the mouse is
+        if(this.isEnemy == false){
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(Math.atan2(mouseY-this.y, mouseX-this.x)+Math.PI/2);
+            ctx.beginPath();
+            ctx.moveTo(0, -200);
+            ctx.lineTo(0, -this.size);
+            ctx.strokeStyle = 'white';
+            ctx.stroke();
+            ctx.restore();
+        }
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation/180*Math.PI);
@@ -66,6 +83,9 @@ class Ship{
         if(this.health < 20 && this.isEnemy == false && music.title != 'Tanc_a_lelek.mp3'){
             music.stop();
             playSong('Tanc_a_lelek.mp3')
+        }
+        if(this.health < 1){
+            this.remove();
         }
         if(this.isEnemy == false){
             this.move();
@@ -96,9 +116,11 @@ class Ship{
     shoot(angle = this.degreesToRadians(this.rotation)-Math.PI/2){
         //x, y, angle, color, size)
         if(this.currentBullets > 0){
-            bullets.push(new Bullet(this.x, this.y, angle, 'white', 30/globalScale));
-            objects.push(new Bullet(this.x, this.y, angle, 'white', 30/globalScale));
-            this.currentBullets -= 1;
+            for(let i = 0; i < ships[this.type].guns.number; i++){
+                bullets.push(new Bullet(this.x-this.gunSpacing+i*this.gunSpacing*2, this.y, angle, this.color, 30/globalScale));
+                objects.push(new Bullet(this.x-this.gunSpacing+i*this.gunSpacing*2, this.y, angle, this.color, 30/globalScale));
+                this.currentBullets -= 1;
+            }
         }
     }
 
@@ -145,11 +167,29 @@ class Ship{
 
     goUp(){
         this.accelerate();
+        if(!keys['a'] && !keys['d']){
+            if(this.angle!=-Math.PI/2){
+                if(this.angle < -Math.PI/2){
+                    this.angle += this.turnSpeed/2;
+                }else{
+                    this.angle -= this.turnSpeed/2;
+                }
+            }
+        }
     }
 
     goDown(){
         this.decelerate();
         this.goingDown = true;
+        if(!keys['a'] && !keys['d']){
+            if(this.angle!=-Math.PI/2){
+                if(this.angle < -Math.PI/2){
+                    this.angle += this.turnSpeed/2;
+                }else{
+                    this.angle -= this.turnSpeed/2;
+                }
+            }
+        }
     }
 
     goLeft(){
@@ -196,7 +236,7 @@ class Ship{
         }
         else{
             //this line is broken
-            if(this.angle < 0){
+            if(this.angle < 0 - this.maxTurn/Math.PI){
                 this.angle += this.turnSpeed;
                 if(!this.goingDown){
                     this.accelerate();
@@ -264,8 +304,6 @@ class Ship{
     }
 
     remove(){
-        this.x = -100;
-        this.y = -100;
         this.rotation = 0;
         this.acc = 0;
         this.vel = 0;
@@ -274,12 +312,14 @@ class Ship{
         this.missiles = 0;
         this.rotateInterval = [0, 0];
         for(let i = 0; i < 100; i++){
-            particles.push(new Particle(this.x, this.y, 'red', 5, 10, 100));
-            objects.push(new Particle(this.x, this.y, 'red', 5, 10, 100));
+            //particle is a class with parameters x, y, color, size
+            let particle = new Particle(this.x, this.y, randomChoice(particlesColors), 1);
+            objects.push(particle);
+            particles.push(particle);
         }
         objects.splice(objects.indexOf(this), 1);
+        this.x = -100;
+        this.y = -100;
     }
 }
 
-//Q: how do i push to github using a .git url
-//A: git remote add origin
